@@ -63,7 +63,7 @@ MainThread(LPVOID lpReserved)
     SOCKADDR_IN server_addr       = { 0 };
     SOCKADDR_IN client_addr       = { 0 };
     WSADATA     wsaData           = { 0 };
-    CHAR        send_buffer[8]    = { 0 };
+    CHAR        send_buffer[4]    = { 0 };
     SOCKET      server            = 0;
     SOCKET      client            = 0;
     WORD        wVersionRequested = 0;
