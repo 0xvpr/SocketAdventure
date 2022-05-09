@@ -6,8 +6,7 @@ import ctypes
 
 from PyQt5.QtCore import (
     Qt,
-    QThread,
-    pyqtSlot
+    QThread
 )
 
 from typing import (
@@ -20,6 +19,11 @@ from PyQt5.QtWidgets import (
     QLabel,
     QWidget
 )
+
+# ------------ Global Variables -------------------#
+
+HOST = "127.0.0.1"
+PORT = 8888
 
 # ------------- Windows Imports -------------------#
 
@@ -53,7 +57,7 @@ class Listener(QThread):
         self.wait()
 
     def run(self) -> None:
-        print("[-] Connecting to client...")
+        print("[+] Connecting to client...")
 
         attempts = 0
         connected = False
@@ -64,13 +68,13 @@ class Listener(QThread):
                 connected = True
             except Exception as ex:
                 attempts += 1
-                print(f"Exception: {ex}\nretrying ({attempts})...")
+                print(f"[-] Exception: {ex}\nretrying ({attempts})...")
         print("[+] Connected.")
 
         while not self.exiting:
             data = self.s.recv(4)
             if data == b"EOF" or data == b"":
-                sys.exit(self.app.exec_())
+                sys.exit(0)
             else:
                 operation = int.from_bytes(data, byteorder="little")
 
@@ -116,9 +120,9 @@ class Listener(QThread):
 class Application(QApplication):
     def __init__(self, argv: List[str], rect: RECT) -> None:
         super().__init__(argv)
+        self.server_addr   = ServerAddr(host=HOST, port=PORT)
         self.infinite_mana = False
         self.rect          = rect
-        self.server_addr   = ServerAddr(host="127.0.0.1", port=8888)
 
         self._setup()
         self.listen_thread = Listener(self.server_addr, self)
@@ -150,12 +154,14 @@ class Application(QApplication):
 
 if __name__ == "__main__":
     hWnd = None
+    print("[+] Searching for window...")
     while not hWnd:
         hWnd = FindWindowA(NULL, b"PwnAdventure3 (32-bit, PCD3D_SM5)")
+    print("[+] Found.\n")
 
     rect = RECT()
     GetWindowRect(hWnd, ctypes.byref(rect))
 
-    print(f"left:\t{rect.left}\nright:\t{rect.right}\ntop:\t{rect.top}\nbottom:\t{rect.bottom}")
+    print(f"left:\t{rect.left}\nright:\t{rect.right}\ntop:\t{rect.top}\nbottom:\t{rect.bottom}\n")
 
     Application(sys.argv, rect)
