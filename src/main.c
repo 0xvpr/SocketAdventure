@@ -27,8 +27,10 @@
 #define HOST "127.0.0.1"
 #define PORT 8888
 
-#define MANA_ACTIVE   (1 << 0)
-#define MANA_INACTIVE (1 << 1)
+#define MANA_ACTIVE      (1 << 0)
+#define MANA_INACTIVE   ~(1 << 0)
+#define HEALTH_ACTIVE    (1 << 1)
+#define HEALTH_INACTIVE ~(1 << 1)
 
 /*************************/
 /*   Static Variables    */
@@ -126,7 +128,7 @@ mainloop:
 
             if (client)
             {
-                *(unsigned int *)send_buffer = (mana ? MANA_ACTIVE : MANA_INACTIVE);
+                *(unsigned int *)send_buffer = (mana ? *(unsigned int *)send_buffer | MANA_ACTIVE : *(unsigned int *)send_buffer & MANA_INACTIVE);
                 send(client, send_buffer, sizeof(unsigned int), 0);
 #ifdef DEBUG
                 fprintf(stdout, "[+] sent: %u\n", *(unsigned int *)send_buffer);

@@ -77,22 +77,40 @@ class Listener(QThread):
                 if operation & (1 << 0):
                     self.app.infinite_mana = True
                     self.app.mana_label.setText("Mana: Active")
-                if operation & (1 << 1):
+                else:
                     self.app.infinite_mana = False
                     self.app.mana_label.setText("Mana: Disabled")
+                if operation & (1 << 1):
+                    pass
+                else:
+                    pass
                 if operation & (1 << 2):
+                    pass
+                else:
                     pass
                 if operation & (1 << 3):
                     pass
+                else:
+                    pass
                 if operation & (1 << 4):
+                    pass
+                else:
                     pass
                 if operation & (1 << 5):
                     pass
+                else:
+                    pass
                 if operation & (1 << 6):
+                    pass
+                else:
                     pass
                 if operation & (1 << 7):
                     pass
+                else:
+                    pass
                 if operation & (1 << 8):
+                    pass
+                else:
                     pass
 
 class Application(QApplication):
