@@ -1,24 +1,56 @@
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
+/**
+ * Creator:    VPR
+ * Created:    May 9, 2022
+ * Updated:    May 9, 2022
+ *
+ * Description:
+ *     Talking to external UI with TCP Sockets.
+**/
 
+#include <stdint.h>
+#include <stdio.h>
+
+#ifndef VC_EXTRA_LEAN
+#define VC_EXTRA_LEAN
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <windows.h>
 #include <psapi.h>
+#endif // VC_EXTRA_LEAN
 
-//#define DEBUG
+//#define DEBUG // Uncomment for debug prompt
+
+/*************************/
+/*        Defines        */
+/*************************/
+
+#define HOST "127.0.0.1"
+#define PORT 8888
 
 #define MANA_ACTIVE   (1 << 0)
 #define MANA_INACTIVE (1 << 1)
 
-static int mana = 0;
+/*************************/
+/*   Static Variables    */
+/*************************/
+
 static HANDLE hThread = NULL;
+static unsigned int mana = 0;
 static uintptr_t mana_addr = 0;
+
+/*************************/
+/* Function Declarations */
+/*************************/
 
 void ToggleInfiniteMana(int mana);
 
-DWORD WINAPI MainThread(LPVOID lpReserved)
+/*************************/
+/*       Main Code       */
+/*************************/
+
+DWORD
+WINAPI
+MainThread(LPVOID lpReserved)
 {
 #ifdef DEBUG
     FILE* fp;
@@ -30,47 +62,57 @@ DWORD WINAPI MainThread(LPVOID lpReserved)
     SOCKADDR_IN client_addr       = { 0 };
     WSADATA     wsaData           = { 0 };
     CHAR        send_buffer[8]    = { 0 };
-    SOCKET      server            =     0;
-    SOCKET      client            =     0;
-    WORD        wVersionRequested =     0;
-    BOOL        rv                =     0;
+    SOCKET      server            = 0;
+    SOCKET      client            = 0;
+    WORD        wVersionRequested = 0;
+    BOOL        rv                = 0;
 
     wVersionRequested = MAKEWORD(2, 2);
     if ((rv = WSAStartup(wVersionRequested, &wsaData)))
     {
-        printf("Startup failed: %d\n", rv);
+#ifdef DEBUG
+        printf("[-] Startup failed: %d\n", rv);
+#endif // DEBUG
         goto mainloop;
     }
 
     server_addr.sin_family      = AF_INET;
-    server_addr.sin_port        = htons(8888);
-    server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    server_addr.sin_port        = htons(PORT);
+    server_addr.sin_addr.s_addr = inet_addr(HOST);
     
     // Create Server Socket
     if ((server = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
     {
-        printf("Invalid Socket\n");
+#ifdef DEBUG
+        printf("[-] Invalid Socket\n");
+#endif // DEBUG
         goto mainloop;
     }
 
     // Bind to Socket
     if ((rv = bind(server, (struct sockaddr *)&server_addr, sizeof(server_addr))) == SOCKET_ERROR)
     {
-        printf("Failed to bind: %d\n", rv);
+#ifdef DEBUG
+        printf("[-] Failed to bind: %d\n", rv);
+#endif // DEBUG
         goto mainloop;
     }
 
     // Listen on Socket
     if ((rv = listen(server, 1)) == SOCKET_ERROR)
     {
-        printf("Failed to listen\n");
+#ifdef DEBUG
+        printf("[-] Failed to listen\n");
+#endif // DEBUG
         goto mainloop;
     }
 
     int client_addr_len = sizeof(client_addr);
     if (!(client = accept(server, (struct sockaddr *)&client_addr, &client_addr_len)))
     {
-        printf("Failed to connect to client\n");
+#ifdef DEBUG
+        printf("[-] Failed to connect to client\n");
+#endif // DEBUG
         goto mainloop;
     }
 
@@ -86,7 +128,9 @@ mainloop:
             {
                 *(unsigned int *)send_buffer = (mana ? MANA_ACTIVE : MANA_INACTIVE);
                 send(client, send_buffer, sizeof(unsigned int), 0);
-                fprintf(stdout, "sent: %u\n", *(unsigned int *)send_buffer);
+#ifdef DEBUG
+                fprintf(stdout, "[+] sent: %u\n", *(unsigned int *)send_buffer);
+#endif // DEBUG
             }
         }
     }
@@ -106,7 +150,9 @@ mainloop:
     FreeLibraryAndExitThread((HMODULE)lpReserved, 0);
 }
 
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+BOOL
+WINAPI
+DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
     (void)lpReserved;
 
